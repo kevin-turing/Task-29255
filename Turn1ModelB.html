@@ -1,1 +1,120 @@
-T1MB
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NPS Retirement Planner</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding: 20px; }
+        .slider-container { margin: 20px 0; }
+        #visualization { height: 400px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>NPS Retirement Planner</h2>
+    
+    <!-- Input Sliders -->
+    <div class="slider-container">
+        <label for="age">Current Age: <span id="ageValue">40</span></label>
+        <input type="range" min="40" max="60" value="40" class="form-control-range" id="age">
+    </div>
+    <div class="slider-container">
+        <label for="monthlyInvestment">Monthly Investment (₹): <span id="investmentValue">50000</span></label>
+        <input type="range" min="1000" max="100000" value="50000" class="form-control-range" id="monthlyInvestment">
+    </div>
+    <div class="slider-container">
+        <label for="expectedReturn">Expected Annual Return (%): <span id="returnValue">12</span></label>
+        <input type="range" min="5" max="15" value="12" class="form-control-range" id="expectedReturn">
+    </div>
+    <div class="slider-container">
+        <label for="annuityRate">Annuity Rate (%): <span id="annuityValue">6</span></label>
+        <input type="range" min="4" max="10" value="6" class="form-control-range" id="annuityRate">
+    </div>
+
+    <!-- Results -->
+    <h3>Results</h3>
+    <p>Estimated Corpus at Retirement: ₹<span id="corpus"></span></p>
+    <p>Monthly Pension: ₹<span id="pension"></span></p>
+
+    <!-- Visualization Placeholder -->
+    <div id="visualization"></div>
+
+    <!-- Scenario Comparison Button -->
+    <button id="compareScenarios" class="btn btn-primary">Compare Scenarios</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+<script>
+    const ctx = document.getElementById('visualization').getContext('2d');
+    let chart;
+
+    function updateCalculations() {
+        const age = document.getElementById('age').value;
+        const monthlyInvestment = document.getElementById('monthlyInvestment').value;
+        const annualReturn = document.getElementById('expectedReturn').value / 100;
+        const annuityRate = document.getElementById('annuityRate').value / 100;
+        const yearsToRetirement = 60 - age;
+
+        // Calculation of total corpus
+        let corpus = 0;
+        let investment = monthlyInvestment * 12; // Yearly investment
+        for(let i = 0; i < yearsToRetirement; i++) {
+            corpus = (corpus + investment) * (1 + annualReturn);
+        }
+
+        // Pension calculation assuming 60% withdrawal and 40% annuity
+        const lumpSum = corpus * 0.6;
+        const annuityInvestment = corpus * 0.4;
+        const pension = (annuityInvestment * annuityRate) / 12;
+
+        document.getElementById('corpus').textContent = corpus.toFixed(2);
+        document.getElementById('pension').textContent = pension.toFixed(2);
+
+        // Visualize growth
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: yearsToRetirement}, (_, i) => age + i),
+                datasets: [{
+                    label: 'Retirement Corpus',
+                    data: Array.from({length: yearsToRetirement}, (_, i) => {
+                        let value = monthlyInvestment * 12 * Math.pow((1 + annualReturn), i + 1);
+                        return value;
+                    }),
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Sliders update
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+        slider.addEventListener('input', function() {
+            document.getElementById(this.id + 'Value').textContent = this.value;
+            updateCalculations();
+        });
+    });
+
+    document.getElementById('compareScenarios').addEventListener('click', function() {
+        // Here you would implement scenario comparison logic, possibly opening a modal or expanding content
+        alert('Feature to compare scenarios would be implemented here.');
+    });
+
+    // Initial calculation
+    updateCalculations();
+</script>
+
+</body>
+</html>

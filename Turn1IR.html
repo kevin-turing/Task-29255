@@ -1,1 +1,252 @@
-T1IR
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NPS Retirement Planner</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <style>
+        body { padding: 20px; }
+        .slider-container { margin-bottom: 20px; }
+        #growthChart { height: 300px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">NPS Retirement Planner</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="slider-container">
+                    <label for="age">Current Age: <span id="ageValue">40</span></label>
+                    <input type="range" class="custom-range" id="age" min="40" max="60" value="40">
+                </div>
+                <div class="slider-container">
+                    <label for="monthlyContribution">Monthly Contribution (₹): <span id="contributionValue">50000</span></label>
+                    <input type="range" class="custom-range" id="monthlyContribution" min="1000" max="100000" step="1000" value="50000">
+                </div>
+                <div class="slider-container">
+                    <label for="expectedReturn">Expected Annual Return (%): <span id="returnValue">12</span></label>
+                    <input type="range" class="custom-range" id="expectedReturn" min="5" max="15" step="0.1" value="12">
+                </div>
+                <div class="slider-container">
+                    <label for="annuityRate">Annuity Rate (%): <span id="annuityValue">6</span></label>
+                    <input type="range" class="custom-range" id="annuityRate" min="4" max="10" step="0.1" value="6">
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Results</h3>
+                <p>Retirement Corpus: ₹<span id="totalCorpus">0</span></p>
+                <p>Lump Sum Withdrawal: ₹<span id="lumpSum">0</span></p>
+                <p>Annuity Investment: ₹<span id="annuityInvestment">0</span></p>
+                <p>Monthly Pension: ₹<span id="monthlyPension">0</span></p>
+                <p>Tax Benefit (Section 80CCD(1)): ₹<span id="taxBenefit">0</span></p>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Scenario Comparison</h3>
+                <div id="scenarioComparison"></div>
+                <button id="addScenario" class="btn btn-primary mt-2">Add Scenario</button>
+                <button id="clearScenarios" class="btn btn-secondary mt-2 ml-2">Clear Scenarios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        const scenarioData = [];
+
+        function updateSliderValue(sliderId, valueId) {
+            const slider = document.getElementById(sliderId);
+            const valueSpan = document.getElementById(valueId);
+            if (slider && valueSpan) {
+                valueSpan.textContent = slider.value;
+            }
+        }
+
+        function calculate() {
+            const age = parseInt(document.getElementById('age').value);
+            const monthlyContribution = parseInt(document.getElementById('monthlyContribution').value);
+            const expectedReturn = parseFloat(document.getElementById('expectedReturn').value) / 100;
+            const annuityRate = parseFloat(document.getElementById('annuityRate').value) / 100;
+            
+            const yearsToRetirement = 60 - age;
+            let corpus = 0;
+            const dataPoints = [];
+            
+            for (let year = 0; year <= yearsToRetirement; year++) {
+                if (year > 0) {
+                    corpus = (corpus + monthlyContribution * 12) * (1 + expectedReturn);
+                }
+                dataPoints.push(corpus);
+            }
+            
+            const totalCorpus = dataPoints[dataPoints.length - 1];
+            const lumpSum = totalCorpus * 0.6;
+            const annuityInvestment = totalCorpus * 0.4;
+            const monthlyPension = (annuityInvestment * annuityRate) / 12;
+            const taxBenefit = Math.min(monthlyContribution * 12, 150000);
+            
+            updateElementText('totalCorpus', totalCorpus.toFixed(2));
+            updateElementText('lumpSum', lumpSum.toFixed(2));
+            updateElementText('annuityInvestment', annuityInvestment.toFixed(2));
+            updateElementText('monthlyPension', monthlyPension.toFixed(2));
+            updateElementText('taxBenefit', taxBenefit.toFixed(2));
+            
+            updateChart(dataPoints, age);
+        }
+
+        function updateElementText(elementId, text) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+            }
+        }
+
+        function updateChart(dataPoints, startAge) {
+            const ctx = document.getElementById('growthChart');
+            if (!ctx) return;
+            
+            const chartContext = ctx.getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(chartContext, {
+                type: 'line',
+                data: {
+                    labels: dataPoints.map((_, index) => startAge + index),
+                    datasets: [{
+                        label: 'Retirement Corpus',
+                        data: dataPoints,
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        xAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Age'
+                            }
+                        }],
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Corpus (₹)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toFixed(0);
+                                }
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        function addScenario() {
+            const scenario = {
+                age: document.getElementById('age').value,
+                monthlyContribution: document.getElementById('monthlyContribution').value,
+                expectedReturn: document.getElementById('expectedReturn').value,
+                annuityRate: document.getElementById('annuityRate').value,
+                totalCorpus: document.getElementById('totalCorpus').textContent,
+                monthlyPension: document.getElementById('monthlyPension').textContent
+            };
+            
+            scenarioData.push(scenario);
+            updateScenarioComparison();
+        }
+
+        function updateScenarioComparison() {
+            const comparisonDiv = document.getElementById('scenarioComparison');
+            if (!comparisonDiv) return;
+
+            comparisonDiv.innerHTML = '';
+            
+            if (scenarioData.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'table table-striped';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Age</th>
+                            <th>Monthly Contribution</th>
+                            <th>Expected Return</th>
+                            <th>Annuity Rate</th>
+                            <th>Total Corpus</th>
+                            <th>Monthly Pension</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+                
+                const tbody = table.querySelector('tbody');
+                scenarioData.forEach((scenario, index) => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${scenario.age}</td>
+                        <td>₹${scenario.monthlyContribution}</td>
+                        <td>${scenario.expectedReturn}%</td>
+                        <td>${scenario.annuityRate}%</td>
+                        <td>₹${scenario.totalCorpus}</td>
+                        <td>₹${scenario.monthlyPension}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger delete-scenario" data-index="${index}">Delete</button>
+                        </td>
+                    `;
+                });
+                
+                comparisonDiv.appendChild(table);
+
+                // Add event listeners for delete buttons
+                document.querySelectorAll('.delete-scenario').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        deleteScenario(index);
+                    });
+                });
+            }
+        }
+
+        function deleteScenario(index) {
+            scenarioData.splice(index, 1);
+            updateScenarioComparison();
+        }
+
+        function clearScenarios() {
+            scenarioData.length = 0;
+            updateScenarioComparison();
+        }
+
+        // Event listeners
+        document.querySelectorAll('.custom-range').forEach(slider => {
+            slider.addEventListener('input', function() {
+                updateSliderValue(this.id, this.id + 'Value');
+                calculate();
+            });
+        });
+
+        document.getElementById('addScenario').addEventListener('click', addScenario);
+        document.getElementById('clearScenarios').addEventListener('click', clearScenarios);
+
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
