@@ -6,57 +6,161 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
     <style>
-        body { padding: 20px; }
-        .slider-container { margin-bottom: 20px; }
-        #growthChart { height: 300px; }
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-header {
+            background-color: #3498db;
+            color: #fff;
+            font-weight: bold;
+        }
+        .card {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .slider-container label {
+            font-weight: bold;
+        }
+        .range-wrap {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .bubble {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            display: none;
+        }
+        .bubble::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 8px solid #3498db;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .range-wrap input[type="range"]:active + .bubble,
+        .range-wrap input[type="range"]:focus + .bubble {
+            display: block;
+        }
+        #growthChart {
+            height: 300px;
+        }
+        .list-group-item {
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="mb-4">NPS Retirement Planner</h1>
-        
+        <h1 class="mb-4 text-center">NPS Retirement Planner</h1>
         <div class="row">
+            <!-- Input Parameters Card -->
             <div class="col-md-6">
-                <div class="slider-container">
-                    <label for="age">Current Age: <span id="ageValue">40</span></label>
-                    <input type="range" class="custom-range" id="age" min="40" max="60" value="40">
-                </div>
-                <div class="slider-container">
-                    <label for="monthlyContribution">Monthly Contribution (₹): <span id="contributionValue">50000</span></label>
-                    <input type="range" class="custom-range" id="monthlyContribution" min="1000" max="100000" step="1000" value="50000">
-                </div>
-                <div class="slider-container">
-                    <label for="expectedReturn">Expected Annual Return (%): <span id="returnValue">12</span></label>
-                    <input type="range" class="custom-range" id="expectedReturn" min="5" max="15" step="0.1" value="12">
-                </div>
-                <div class="slider-container">
-                    <label for="annuityRate">Annuity Rate (%): <span id="annuityValue">6</span></label>
-                    <input type="range" class="custom-range" id="annuityRate" min="4" max="10" step="0.1" value="6">
+                <div class="card mb-4">
+                    <div class="card-header">Input Parameters</div>
+                    <div class="card-body">
+                        <!-- Age Slider -->
+                        <div class="slider-container">
+                            <label for="age">Current Age: <span id="ageValue">40</span></label>
+                            <div class="range-wrap">
+                                <input type="range" class="custom-range" id="age" min="40" max="60" value="40">
+                                <output class="bubble"></output>
+                            </div>
+                        </div>
+                        <!-- Monthly Contribution Slider -->
+                        <div class="slider-container">
+                            <label for="monthlyContribution">Monthly Contribution (₹): <span id="monthlyContributionValue">50000</span></label>
+                            <div class="range-wrap">
+                                <input type="range" class="custom-range" id="monthlyContribution" min="1000" max="100000" step="1000" value="50000">
+                                <output class="bubble"></output>
+                            </div>
+                        </div>
+                        <!-- Expected Return Slider -->
+                        <div class="slider-container">
+                            <label for="expectedReturn">Expected Annual Return (%): <span id="expectedReturnValue">12</span></label>
+                            <div class="range-wrap">
+                                <input type="range" class="custom-range" id="expectedReturn" min="5" max="15" step="0.1" value="12">
+                                <output class="bubble"></output>
+                            </div>
+                        </div>
+                        <!-- Annuity Rate Slider -->
+                        <div class="slider-container">
+                            <label for="annuityRate">Annuity Rate (%): <span id="annuityRateValue">6</span></label>
+                            <div class="range-wrap">
+                                <input type="range" class="custom-range" id="annuityRate" min="4" max="10" step="0.1" value="6">
+                                <output class="bubble"></output>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
+            <!-- Results Card -->
             <div class="col-md-6">
-                <h3>Results</h3>
-                <p>Retirement Corpus: ₹<span id="totalCorpus">0</span></p>
-                <p>Lump Sum Withdrawal: ₹<span id="lumpSum">0</span></p>
-                <p>Annuity Investment: ₹<span id="annuityInvestment">0</span></p>
-                <p>Monthly Pension: ₹<span id="monthlyPension">0</span></p>
-                <p>Tax Benefit (Section 80CCD(1)): ₹<span id="taxBenefit">0</span></p>
+                <div class="card mb-4">
+                    <div class="card-header">Results</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Retirement Corpus
+                                <span class="badge badge-primary badge-pill">₹<span id="totalCorpus">0</span></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Lump Sum Withdrawal
+                                <span class="badge badge-primary badge-pill">₹<span id="lumpSum">0</span></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Annuity Investment
+                                <span class="badge badge-primary badge-pill">₹<span id="annuityInvestment">0</span></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Monthly Pension
+                                <span class="badge badge-primary badge-pill">₹<span id="monthlyPension">0</span></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Tax Benefit (Section 80CCD(1))
+                                <span class="badge badge-primary badge-pill">₹<span id="taxBenefit">0</span></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-        
+        <!-- Growth Chart Card -->
         <div class="row mt-4">
             <div class="col-12">
-                <canvas id="growthChart"></canvas>
+                <div class="card mb-4">
+                    <div class="card-header">Growth Chart</div>
+                    <div class="card-body">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-        
+        <!-- Scenario Comparison Card -->
         <div class="row mt-4">
             <div class="col-12">
-                <h3>Scenario Comparison</h3>
-                <div id="scenarioComparison"></div>
-                <button id="addScenario" class="btn btn-primary mt-2">Add Scenario</button>
-                <button id="clearScenarios" class="btn btn-secondary mt-2 ml-2">Clear Scenarios</button>
+                <div class="card mb-4">
+                    <div class="card-header">Scenario Comparison</div>
+                    <div class="card-body">
+                        <div id="scenarioComparison"></div>
+                        <button id="addScenario" class="btn btn-primary mt-2">Add Scenario</button>
+                        <button id="clearScenarios" class="btn btn-secondary mt-2 ml-2">Clear Scenarios</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -73,35 +177,46 @@
             }
         }
 
+        function updateBubble(range, bubble) {
+            const val = range.value;
+            const min = range.min ? range.min : 0;
+            const max = range.max ? range.max : 100;
+            const percent = ((val - min) / (max - min)) * 100;
+            bubble.innerHTML = val;
+
+            // Adjust bubble position
+            bubble.style.left = `calc(${percent}% + (${8 - percent * 0.15}px))`;
+        }
+
         function calculate() {
             const age = parseInt(document.getElementById('age').value);
             const monthlyContribution = parseInt(document.getElementById('monthlyContribution').value);
             const expectedReturn = parseFloat(document.getElementById('expectedReturn').value) / 100;
             const annuityRate = parseFloat(document.getElementById('annuityRate').value) / 100;
-            
+
             const yearsToRetirement = 60 - age;
             let corpus = 0;
             const dataPoints = [];
-            
+
             for (let year = 0; year <= yearsToRetirement; year++) {
                 if (year > 0) {
                     corpus = (corpus + monthlyContribution * 12) * (1 + expectedReturn);
                 }
                 dataPoints.push(corpus);
             }
-            
+
             const totalCorpus = dataPoints[dataPoints.length - 1];
             const lumpSum = totalCorpus * 0.6;
             const annuityInvestment = totalCorpus * 0.4;
             const monthlyPension = (annuityInvestment * annuityRate) / 12;
             const taxBenefit = Math.min(monthlyContribution * 12, 150000);
-            
+
             updateElementText('totalCorpus', totalCorpus.toFixed(2));
             updateElementText('lumpSum', lumpSum.toFixed(2));
             updateElementText('annuityInvestment', annuityInvestment.toFixed(2));
             updateElementText('monthlyPension', monthlyPension.toFixed(2));
             updateElementText('taxBenefit', taxBenefit.toFixed(2));
-            
+
             updateChart(dataPoints, age);
         }
 
@@ -115,47 +230,59 @@
         function updateChart(dataPoints, startAge) {
             const ctx = document.getElementById('growthChart');
             if (!ctx) return;
-            
-            const chartContext = ctx.getContext('2d');
-            
+
+            const labels = dataPoints.map((_, index) => startAge + index);
+
             if (chart) {
-                chart.destroy();
-            }
-            
-            chart = new Chart(chartContext, {
-                type: 'line',
-                data: {
-                    labels: dataPoints.map((_, index) => startAge + index),
-                    datasets: [{
-                        label: 'Retirement Corpus',
-                        data: dataPoints,
-                        borderColor: 'blue',
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        xAxes: [{
-                            scaleLabel: {
-                                display: true,
-                                labelString: 'Age'
-                            }
-                        }],
-                        yAxes: [{
-                            scaleLabel: {
-                                display: true,
-                                labelString: 'Corpus (₹)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '₹' + value.toFixed(0);
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = dataPoints;
+                chart.update();
+            } else {
+                const chartContext = ctx.getContext('2d');
+
+                chart = new Chart(chartContext, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Retirement Corpus',
+                            data: dataPoints,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52,152,219,0.2)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            xAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Age'
+                                }
+                            }],
+                            yAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Corpus (₹)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value.toLocaleString();
+                                    }
+                                }
+                            }]
+                        },
+                        tooltips: {
+                            callbacks: {
+                                label: function(tooltipItem, data) {
+                                    return '₹' + tooltipItem.yLabel.toLocaleString();
                                 }
                             }
-                        }]
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         function addScenario() {
@@ -167,7 +294,7 @@
                 totalCorpus: document.getElementById('totalCorpus').textContent,
                 monthlyPension: document.getElementById('monthlyPension').textContent
             };
-            
+
             scenarioData.push(scenario);
             updateScenarioComparison();
         }
@@ -177,7 +304,7 @@
             if (!comparisonDiv) return;
 
             comparisonDiv.innerHTML = '';
-            
+
             if (scenarioData.length > 0) {
                 const table = document.createElement('table');
                 table.className = 'table table-striped';
@@ -195,7 +322,7 @@
                     </thead>
                     <tbody></tbody>
                 `;
-                
+
                 const tbody = table.querySelector('tbody');
                 scenarioData.forEach((scenario, index) => {
                     const row = tbody.insertRow();
@@ -211,7 +338,7 @@
                         </td>
                     `;
                 });
-                
+
                 comparisonDiv.appendChild(table);
 
                 // Add event listeners for delete buttons
@@ -234,12 +361,28 @@
             updateScenarioComparison();
         }
 
-        // Event listeners
-        document.querySelectorAll('.custom-range').forEach(slider => {
-            slider.addEventListener('input', function() {
-                updateSliderValue(this.id, this.id + 'Value');
+        // Event listeners for sliders
+        document.querySelectorAll('.range-wrap').forEach(wrap => {
+            const range = wrap.querySelector('.custom-range');
+            const bubble = wrap.querySelector('.bubble');
+
+            range.addEventListener('input', () => {
+                updateBubble(range, bubble);
+                updateSliderValue(range.id, range.id + 'Value');
                 calculate();
             });
+
+            range.addEventListener('mouseover', () => {
+                bubble.style.display = 'block';
+            });
+
+            range.addEventListener('mouseout', () => {
+                bubble.style.display = 'none';
+            });
+
+            // Set bubble on page load
+            updateBubble(range, bubble);
+            bubble.style.display = 'none';
         });
 
         document.getElementById('addScenario').addEventListener('click', addScenario);
